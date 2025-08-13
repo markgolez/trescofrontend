@@ -1,0 +1,526 @@
+## Django Models Inventory (tresco/apps)
+
+Notes
+- Fields inherited from `TimeStampedUUIDModel` are present on all its subclasses: `pkid` (BigAutoField, primary_key, editable=False), `id` (UUIDField, unique=True, editable=False, default=uuid4), `created_at` (DateTimeField, auto_now_add=True), `updated_at` (DateTimeField, auto_now=True).
+- Only app models under `tresco/apps/` are listed. Abstract bases are marked as abstract.
+
+### general
+- **CustomModel** (abstract)
+  - Manager: `objects = CustomManager()`
+- **TimeStampedUUIDModel** (abstract; extends CustomModel)
+  - pkid: BigAutoField, primary_key, editable=False
+  - id: UUIDField, unique=True, editable=False, default=uuid4
+  - created_at: DateTimeField, auto_now_add=True
+  - updated_at: DateTimeField, auto_now=True
+
+### cores
+- **Core** (TimeStampedUUIDModel)
+  - domain: CharField, max_length=255, unique=True
+  - logo: ImageField, upload_to="images/", blank=True
+  - owner: ForeignKey to `user.User`, on_delete=CASCADE
+  - ticker: CharField, max_length=5, unique=True
+
+### user
+- **User** (AbstractBaseUser, PermissionsMixin, TimeStampedUUIDModel)
+  - username: CharField, unique=True, max_length=255
+  - first_name: CharField
+  - last_name: CharField
+  - email: EmailField, unique=True
+  - is_staff: BooleanField, default=False
+  - is_active: BooleanField, default=True
+
+### userprofile
+- **Address** (TimeStampedUUIDModel)
+  - street: CharField, max_length=100
+  - barangay: CharField, max_length=100
+  - city_municipality: CharField, max_length=100
+  - province: CharField, max_length=100
+  - region: CharField, max_length=100
+  - country: CharField, max_length=100
+  - zipcode: CharField, max_length=20
+- **UserProfile** (TimeStampedUUIDModel)
+  - user: OneToOneField to `user.User`, related_name="userprofile", on_delete=CASCADE
+  - bio: TextField, blank=True, null=True
+  - profile_picture: ImageField, upload_to="profile_pictures/", default="/profile_default.png", blank=True, null=True
+  - date_of_birth: DateField, blank=True, null=True
+  - address: ForeignKey to `userprofile.Address`, on_delete=SET_NULL, blank=True, null=True
+  - website: URLField, blank=True, null=True
+  - social_media_handle: CharField, max_length=50, blank=True, null=True
+  - phone_number: CharField, max_length=15, blank=True, null=True
+  - gender: CharField, max_length=20, choices=Gender, default=Gender.OTHER
+  - is_agent: BooleanField, default=False
+  - is_verified: BooleanField, default=False
+- **UserAddress** (TimeStampedUUIDModel)
+  - userprofile: ForeignKey to `userprofile.UserProfile`, related_name="profile_address", on_delete=CASCADE
+  - address: ForeignKey to `userprofile.Address`, related_name="profile_address", on_delete=CASCADE
+- **VerifiedAccount** (TimeStampedUUIDModel)
+  - user: OneToOneField to `user.User`, on_delete=CASCADE
+  - valid_id: ImageField, upload_to="verification/", default="/default_valid_id.png"
+  - selfie_with_id: ImageField, upload_to="verification/", default="/selfie_valid_id.png"
+  - proof_of_address: ImageField, upload_to="verification/", default="/default_proof_of_address.png"
+
+### orders
+- **Order** (models.Model)
+  - buyer: ForeignKey to AUTH_USER_MODEL, related_name="orders", on_delete=CASCADE
+  - total_amount: DecimalField, max_digits=12, decimal_places=2
+  - status: CharField, max_length=20, choices=STATUS_CHOICES, default="pending"
+  - shipping_address: TextField
+  - created_at: DateTimeField, auto_now_add=True
+  - updated_at: DateTimeField, auto_now=True
+- **OrderItem** (models.Model)
+  - order: ForeignKey to `orders.Order`, related_name="items", on_delete=CASCADE
+  - product: ForeignKey to `marketplace.Product`, on_delete=CASCADE
+  - quantity: PositiveIntegerField, default=1
+  - price: DecimalField, max_digits=10, decimal_places=2
+
+### notification
+- **Notification** (models.Model)
+  - recipient: ForeignKey to AUTH_USER_MODEL, related_name="notifications", on_delete=CASCADE
+  - title: CharField, max_length=255
+  - message: TextField
+  - notification_type: CharField, max_length=20, choices=NOTIFICATION_TYPES
+  - is_read: BooleanField, default=False
+  - related_object_type: CharField, max_length=50, blank=True, null=True
+  - related_object_id: PositiveIntegerField, blank=True, null=True
+  - created_at: DateTimeField, auto_now_add=True
+  - Meta: ordering=["-created_at"]
+
+### messaging
+- **Conversation** (models.Model)
+  - participants: ManyToManyField to AUTH_USER_MODEL, related_name="conversations"
+  - created_at: DateTimeField, auto_now_add=True
+- **Message** (models.Model)
+  - conversation: ForeignKey to `messaging.Conversation`, related_name="messages", on_delete=CASCADE
+  - sender: ForeignKey to AUTH_USER_MODEL, related_name="sent_messages", on_delete=CASCADE
+  - content: TextField
+  - is_read: BooleanField, default=False
+  - created_at: DateTimeField, auto_now_add=True
+  - Meta: ordering=["created_at"]
+
+### dispute
+- **Dispute** (models.Model)
+  - initiator: ForeignKey to AUTH_USER_MODEL, related_name="initiated_disputes", on_delete=CASCADE
+  - respondent: ForeignKey to AUTH_USER_MODEL, related_name="responded_disputes", on_delete=CASCADE
+  - dispute_type: CharField, max_length=20, choices=DISPUTE_TYPES
+  - title: CharField, max_length=255
+  - description: TextField
+  - status: CharField, max_length=20, choices=STATUS_CHOICES, default="open"
+  - related_object_type: CharField, max_length=50, blank=True, null=True
+  - related_object_id: PositiveIntegerField, blank=True, null=True
+  - created_at: DateTimeField, auto_now_add=True
+  - updated_at: DateTimeField, auto_now=True
+  - Meta: ordering=["-created_at"]
+
+### offered_services
+- **ServiceCategory** (TimeStampedUUIDModel)
+  - name: CharField, max_length=100
+  - description: TextField, blank=True
+  - icon: CharField, max_length=50, blank=True
+  - is_active: BooleanField, default=True
+  - Meta: verbose_name="Service Category", verbose_name_plural="Service Categories", ordering=["name"]
+- **ServiceType** (TimeStampedUUIDModel)
+  - category: ForeignKey to `ServiceCategory`, related_name="service_types", on_delete=CASCADE
+  - name: CharField, max_length=100
+  - description: TextField, blank=True
+  - is_active: BooleanField, default=True
+  - Meta: unique_together=["category", "name"], verbose_name="Service Type", verbose_name_plural="Service Types", ordering=["category", "name"]
+- **ServiceProviderProfile** (TimeStampedUUIDModel)
+  - user: OneToOneField to `user.User`, related_name="service_profile", on_delete=CASCADE
+  - bio: TextField, blank=True
+  - skills: JSONField, default=list
+  - experience_years: PositiveIntegerField, default=0
+  - total_earnings: DecimalField, max_digits=12, decimal_places=2, default=0.00
+  - total_orders: PositiveIntegerField, default=0
+  - average_rating: DecimalField, max_digits=3, decimal_places=2, default=0.00
+  - is_verified: BooleanField, default=False
+  - Meta: verbose_name="Service Provider Profile", verbose_name_plural="Service Provider Profiles"
+- **Service** (TimeStampedUUIDModel)
+  - provider: ForeignKey to `ServiceProviderProfile`, related_name="services", on_delete=CASCADE
+  - service_type: ForeignKey to `ServiceType`, related_name="services", on_delete=CASCADE
+  - title: CharField, max_length=200
+  - description: TextField
+  - is_featured: BooleanField, default=False
+  - status: CharField, max_length=10, choices=STATUS_CHOICES, default="active"
+  - view_count: PositiveIntegerField, default=0
+  - booking_count: PositiveIntegerField, default=0
+  - rating_average: DecimalField, max_digits=3, decimal_places=2, default=0.00
+  - rating_count: PositiveIntegerField, default=0
+  - Meta: verbose_name="Service", verbose_name_plural="Services", ordering=["-created_at"]
+- **ServiceImage** (TimeStampedUUIDModel)
+  - service: ForeignKey to `Service`, related_name="images", on_delete=CASCADE
+  - image: ImageField, upload_to="services/images/"
+  - caption: CharField, max_length=200, blank=True
+  - is_primary: BooleanField, default=False
+  - Meta: verbose_name="Service Image", verbose_name_plural="Service Images", ordering=["-is_primary", "created_at"]
+- **ServicePackage** (TimeStampedUUIDModel)
+  - service: ForeignKey to `Service`, related_name="packages", on_delete=CASCADE
+  - name: CharField, max_length=50
+  - billing_type: CharField, max_length=20, choices=BILLING_TYPE_CHOICES, default="fixed"
+  - description: TextField
+  - price: DecimalField, max_digits=10, decimal_places=2
+  - delivery_time: PositiveIntegerField (days)
+  - revision_count: PositiveIntegerField, default=1
+  - features: JSONField, default=list
+  - Meta: verbose_name="Service Package", verbose_name_plural="Service Packages", ordering=["price"]
+- **ServiceBooking** (TimeStampedUUIDModel)
+  - service: ForeignKey to `Service`, related_name="bookings", on_delete=CASCADE
+  - client: ForeignKey to `user.User`, related_name="service_bookings", on_delete=CASCADE
+  - package: ForeignKey to `ServicePackage`, related_name="bookings", on_delete=CASCADE
+  - status: CharField, max_length=15, choices=STATUS_CHOICES, default="pending"
+  - requirements: TextField
+  - total_amount: DecimalField, max_digits=10, decimal_places=2
+  - delivery_date: DateTimeField
+  - accepted_at: DateTimeField, null=True, blank=True
+  - completed_at: DateTimeField, null=True, blank=True
+  - Meta: verbose_name="Service Booking", verbose_name_plural="Service Bookings", ordering=["-created_at"]
+- **ServiceReview** (TimeStampedUUIDModel)
+  - booking: OneToOneField to `ServiceBooking`, related_name="review", on_delete=CASCADE
+  - reviewer: ForeignKey to `user.User`, related_name="service_reviews", on_delete=CASCADE
+  - rating: PositiveIntegerField, validators=[1..5]
+  - comment: TextField, max_length=1000
+  - is_public: BooleanField, default=True
+  - Meta: verbose_name="Service Review", verbose_name_plural="Service Reviews", ordering=["-created_at"]
+
+### marketplace
+- **ProductCategory** (TimeStampedUUIDModel)
+  - name: CharField, max_length=100, unique=True
+  - description: TextField, blank=True
+  - icon: CharField, max_length=50, blank=True
+  - parent: ForeignKey to self, related_name="children", on_delete=CASCADE, null=True, blank=True
+  - is_active: BooleanField, default=True
+  - Meta: verbose_name="Product Category", verbose_name_plural="Product Categories", ordering=["name"]
+- **Product** (TimeStampedUUIDModel)
+  - seller: ForeignKey to `user.User`, related_name="products", on_delete=CASCADE
+  - category: ForeignKey to `ProductCategory`, related_name="products", on_delete=CASCADE
+  - title: CharField, max_length=200
+  - description: TextField
+  - condition: CharField, max_length=10, choices=CONDITION_CHOICES
+  - price: DecimalField, max_digits=10, decimal_places=2
+  - original_price: DecimalField, max_digits=10, decimal_places=2, null=True, blank=True
+  - quantity: PositiveIntegerField, default=1
+  - status: CharField, max_length=10, choices=STATUS_CHOICES, default="active"
+  - brand: CharField, max_length=100, blank=True
+  - model: CharField, max_length=100, blank=True
+  - color: CharField, max_length=50, blank=True
+  - size: CharField, max_length=50, blank=True
+  - weight: DecimalField, max_digits=8, decimal_places=2, null=True, blank=True
+  - dimensions: CharField, max_length=100, blank=True
+  - location: CharField, max_length=200, blank=True
+  - shipping_available: BooleanField, default=True
+  - local_pickup_available: BooleanField, default=True
+  - view_count: PositiveIntegerField, default=0
+  - favorite_count: PositiveIntegerField, default=0
+  - rating_average: DecimalField, max_digits=3, decimal_places=2, default=0.00
+  - rating_count: PositiveIntegerField, default=0
+  - Meta: verbose_name="Product", verbose_name_plural="Products", ordering=["-created_at"]
+- **ProductImage** (TimeStampedUUIDModel)
+  - product: ForeignKey to `Product`, related_name="images", on_delete=CASCADE
+  - image: ImageField, upload_to="marketplace/products/"
+  - caption: CharField, max_length=200, blank=True
+  - is_primary: BooleanField, default=False
+  - order: PositiveIntegerField, default=0
+  - Meta: verbose_name="Product Image", verbose_name_plural="Product Images", ordering=["-is_primary", "order", "created_at"]
+- **ProductFavorite** (TimeStampedUUIDModel)
+  - user: ForeignKey to `user.User`, related_name="favorite_products", on_delete=CASCADE
+  - product: ForeignKey to `Product`, related_name="favorites", on_delete=CASCADE
+  - Meta: unique_together=["user", "product"], verbose_name="Product Favorite", verbose_name_plural="Product Favorites"
+- **ProductOrder** (TimeStampedUUIDModel)
+  - buyer: ForeignKey to `user.User`, related_name="purchases", on_delete=CASCADE
+  - product: ForeignKey to `Product`, related_name="orders", on_delete=CASCADE
+  - quantity: PositiveIntegerField, default=1
+  - unit_price: DecimalField, max_digits=10, decimal_places=2
+  - total_amount: DecimalField, max_digits=10, decimal_places=2
+  - shipping_cost: DecimalField, max_digits=10, decimal_places=2, default=0.00
+  - status: CharField, max_length=15, choices=STATUS_CHOICES, default="pending"
+  - payment_status: CharField, max_length=15, choices=PAYMENT_STATUS_CHOICES, default="pending"
+  - shipping_address: TextField
+  - shipping_method: CharField, max_length=50, blank=True
+  - tracking_number: CharField, max_length=100, blank=True
+  - confirmed_at: DateTimeField, null=True, blank=True
+  - shipped_at: DateTimeField, null=True, blank=True
+  - delivered_at: DateTimeField, null=True, blank=True
+  - Meta: verbose_name="Product Order", verbose_name_plural="Product Orders", ordering=["-created_at"]
+- **ProductReview** (TimeStampedUUIDModel)
+  - reviewer: ForeignKey to `user.User`, related_name="product_reviews", on_delete=CASCADE
+  - product: ForeignKey to `Product`, related_name="reviews", on_delete=CASCADE
+  - order: ForeignKey to `ProductOrder`, related_name="reviews", on_delete=CASCADE, null=True, blank=True
+  - rating: PositiveIntegerField (1–5)
+  - title: CharField, max_length=200, blank=True
+  - comment: TextField
+  - is_verified_purchase: BooleanField, default=False
+  - helpful_votes: PositiveIntegerField, default=0
+  - unhelpful_votes: PositiveIntegerField, default=0
+  - Meta: unique_together=["reviewer", "product"], verbose_name="Product Review", verbose_name_plural="Product Reviews", ordering=["-created_at"]
+- **SellerProfile** (TimeStampedUUIDModel)
+  - user: OneToOneField to `user.User`, related_name="seller_profile", on_delete=CASCADE
+  - business_name: CharField, max_length=200, blank=True
+  - business_description: TextField, blank=True
+  - business_address: TextField, blank=True
+  - business_phone: CharField, max_length=20, blank=True
+  - business_email: EmailField, blank=True
+  - website: URLField, blank=True
+  - is_verified: BooleanField, default=False
+  - verification_date: DateTimeField, null=True, blank=True
+  - total_sales: PositiveIntegerField, default=0
+  - total_products: PositiveIntegerField, default=0
+  - rating_average: DecimalField, max_digits=3, decimal_places=2, default=0.00
+  - rating_count: PositiveIntegerField, default=0
+  - auto_accept_orders: BooleanField, default=False
+  - shipping_policy: TextField, blank=True
+  - return_policy: TextField, blank=True
+  - Meta: verbose_name="Seller Profile", verbose_name_plural="Seller Profiles"
+
+### posting
+- **PostingCategory** (TimeStampedUUIDModel)
+  - name: CharField, max_length=100, unique=True
+  - description: TextField, blank=True
+  - icon: CharField, max_length=50, blank=True
+  - parent: ForeignKey to self, related_name="children", on_delete=CASCADE, null=True, blank=True
+  - is_active: BooleanField, default=True
+  - Meta: verbose_name="Posting Category", verbose_name_plural="Posting Categories", ordering=["name"]
+- **Posting** (TimeStampedUUIDModel)
+  - seller: ForeignKey to `user.User`, related_name="postings", on_delete=CASCADE
+  - category: ForeignKey to `PostingCategory`, related_name="postings", on_delete=CASCADE
+  - title: CharField, max_length=200
+  - description: TextField
+  - posting_type: CharField, max_length=15, choices=TYPE_CHOICES
+  - status: CharField, max_length=15, choices=STATUS_CHOICES, default="pending"
+  - starting_price: DecimalField, max_digits=10, decimal_places=2, null=True, blank=True
+  - reserve_price: DecimalField, max_digits=10, decimal_places=2, null=True, blank=True
+  - buy_now_price: DecimalField, max_digits=10, decimal_places=2, null=True, blank=True
+  - current_price: DecimalField, max_digits=10, decimal_places=2, null=True, blank=True
+  - start_date: DateTimeField
+  - end_date: DateTimeField
+  - min_bid_increment: DecimalField, max_digits=10, decimal_places=2, default=1.00
+  - location: CharField, max_length=200, blank=True
+  - condition: CharField, max_length=50, blank=True
+  - brand: CharField, max_length=100, blank=True
+  - model: CharField, max_length=100, blank=True
+  - year: PositiveIntegerField, null=True, blank=True
+  - view_count: PositiveIntegerField, default=0
+  - bid_count: PositiveIntegerField, default=0
+  - favorite_count: PositiveIntegerField, default=0
+  - allow_negotiation: BooleanField, default=True
+  - auto_extend: BooleanField, default=False
+  - require_verification: BooleanField, default=False
+  - Meta: verbose_name="Posting", verbose_name_plural="Postings", ordering=["-created_at"]
+- **PostingImage** (TimeStampedUUIDModel)
+  - posting: ForeignKey to `Posting`, related_name="images", on_delete=CASCADE
+  - image: ImageField, upload_to="posting/images/"
+  - caption: CharField, max_length=200, blank=True
+  - is_primary: BooleanField, default=False
+  - order: PositiveIntegerField, default=0
+  - Meta: verbose_name="Posting Image", verbose_name_plural="Posting Images", ordering=["-is_primary", "order", "created_at"]
+- **Bid** (TimeStampedUUIDModel)
+  - bidder: ForeignKey to `user.User`, related_name="bids", on_delete=CASCADE
+  - posting: ForeignKey to `Posting`, related_name="bids", on_delete=CASCADE
+  - amount: DecimalField, max_digits=10, decimal_places=2
+  - status: CharField, max_length=15, choices=STATUS_CHOICES, default="active"
+  - is_auto_bid: BooleanField, default=False
+  - max_amount: DecimalField, max_digits=10, decimal_places=2, null=True, blank=True
+  - is_anonymous: BooleanField, default=False
+  - Meta: verbose_name="Bid", verbose_name_plural="Bids", ordering=["-amount", "-created_at"]
+- **Negotiation** (TimeStampedUUIDModel)
+  - buyer: ForeignKey to `user.User`, related_name="buyer_negotiations", on_delete=CASCADE
+  - seller: ForeignKey to `user.User`, related_name="seller_negotiations", on_delete=CASCADE
+  - posting: ForeignKey to `Posting`, related_name="negotiations", on_delete=CASCADE
+  - status: CharField, max_length=15, choices=STATUS_CHOICES, default="active"
+  - initial_offer: DecimalField, max_digits=10, decimal_places=2
+  - current_offer: DecimalField, max_digits=10, decimal_places=2
+  - accepted_price: DecimalField, max_digits=10, decimal_places=2, null=True, blank=True
+  - accepted_at: DateTimeField, null=True, blank=True
+  - expired_at: DateTimeField, null=True, blank=True
+  - Meta: unique_together=["buyer", "posting"], verbose_name="Negotiation", verbose_name_plural="Negotiations", ordering=["-created_at"]
+- **NegotiationMessage** (TimeStampedUUIDModel)
+  - negotiation: ForeignKey to `Negotiation`, related_name="messages", on_delete=CASCADE
+  - sender: ForeignKey to `user.User`, related_name="negotiation_messages", on_delete=CASCADE
+  - message_type: CharField, max_length=15, choices=MESSAGE_TYPE_CHOICES
+  - content: TextField
+  - offer_amount: DecimalField, max_digits=10, decimal_places=2, null=True, blank=True
+  - is_read: BooleanField, default=False
+  - Meta: verbose_name="Negotiation Message", verbose_name_plural="Negotiation Messages", ordering=["created_at"]
+- **PostingFavorite** (TimeStampedUUIDModel)
+  - user: ForeignKey to `user.User`, related_name="posting_favorites", on_delete=CASCADE
+  - posting: ForeignKey to `Posting`, related_name="favorites", on_delete=CASCADE
+  - Meta: unique_together=["user", "posting"], verbose_name="Posting Favorite", verbose_name_plural="Posting Favorites", ordering=["-created_at"]
+- **Proposal** (TimeStampedUUIDModel)
+  - posting: ForeignKey to `Posting`, related_name="proposals", on_delete=CASCADE
+  - sender: ForeignKey to `user.User`, related_name="sent_proposals", on_delete=CASCADE
+  - recipient: ForeignKey to `user.User`, related_name="received_proposals", on_delete=CASCADE
+  - description: TextField
+  - price: DecimalField, max_digits=10, decimal_places=2
+  - status: CharField, max_length=10, choices=STATUS_CHOICES, default="pending"
+  - response_message: TextField, blank=True
+  - responded_at: DateTimeField, null=True, blank=True
+  - Meta: unique_together=["posting", "sender"], verbose_name="Proposal", verbose_name_plural="Proposals", ordering=["-created_at"]
+- **PostingTag** (TimeStampedUUIDModel)
+  - name: CharField, max_length=50, unique=True
+  - post_count: PositiveIntegerField, default=0
+  - Meta: verbose_name="Post Tag", verbose_name_plural="Post Tags", ordering=["name"]
+- **PostingTagRelation** (TimeStampedUUIDModel)
+  - post: ForeignKey to `Posting`, related_name="tag_relations", on_delete=CASCADE
+  - tag: ForeignKey to `PostingTag`, related_name="post_relations", on_delete=CASCADE
+  - Meta: unique_together=["post", "tag"], verbose_name="Post Tag Relation", verbose_name_plural="Post Tag Relations"
+- **PostingView** (TimeStampedUUIDModel)
+  - post: ForeignKey to `Posting`, related_name="views", on_delete=CASCADE
+  - viewer: ForeignKey to AUTH_USER_MODEL, related_name="viewed_posts", on_delete=CASCADE, null=True, blank=True
+  - ip_address: GenericIPAddressField, null=True, blank=True
+  - Meta: unique_together=["post", "viewer", "ip_address"], verbose_name="Post View", verbose_name_plural="Post Views"
+
+### dashboard
+- **Dashboard** (models.Model)
+  - user: OneToOneField to AUTH_USER_MODEL, related_name="dashboard", on_delete=CASCADE
+  - created_at: DateTimeField, auto_now_add=True
+  - updated_at: DateTimeField, auto_now=True
+  - Meta: db_table="dashboard_dashboard", verbose_name="Dashboard", verbose_name_plural="Dashboards"
+- **DashboardService** (models.Model)
+  - dashboard: ForeignKey to `Dashboard`, related_name="services", on_delete=CASCADE
+  - service: ForeignKey to `offered_services.Service`, on_delete=CASCADE
+  - created_at: DateTimeField, auto_now_add=True
+  - Meta: db_table="dashboard_service", unique_together=["dashboard", "service"]
+- **DashboardProduct** (models.Model)
+  - dashboard: ForeignKey to `Dashboard`, related_name="products", on_delete=CASCADE
+  - product: ForeignKey to `marketplace.Product`, on_delete=CASCADE
+  - created_at: DateTimeField, auto_now_add=True
+  - Meta: db_table="dashboard_product", unique_together=["dashboard", "product"]
+- **DashboardTransaction** (models.Model)
+  - dashboard: ForeignKey to `Dashboard`, related_name="transactions", on_delete=CASCADE
+  - transaction: ForeignKey to `transaction.Transaction`, on_delete=CASCADE
+  - created_at: DateTimeField, auto_now_add=True
+  - Meta: db_table="dashboard_transaction", unique_together=["dashboard", "transaction"]
+- **DashboardSummary** (models.Model)
+  - dashboard: OneToOneField to `Dashboard`, related_name="summary", on_delete=CASCADE
+  - total_spent: DecimalField, max_digits=15, decimal_places=2, default=0.00
+  - total_earned: DecimalField, max_digits=15, decimal_places=2, default=0.00
+  - total_services_offered: PositiveIntegerField, default=0
+  - total_products_listed: PositiveIntegerField, default=0
+  - total_services_availed: PositiveIntegerField, default=0
+  - total_products_purchased: PositiveIntegerField, default=0
+  - last_updated: DateTimeField, auto_now=True
+  - Meta: db_table="dashboard_summary"
+
+### momentos
+- **PostCategory** (TimeStampedUUIDModel)
+  - name: CharField, max_length=50, unique=True
+  - description: TextField, blank=True
+  - is_active: BooleanField, default=True
+  - post_count: PositiveIntegerField, default=0
+  - Meta: verbose_name="Post Category", verbose_name_plural="Post Categories"
+- **Post** (TimeStampedUUIDModel)
+  - user: ForeignKey to `user.User`, related_name="posts", on_delete=CASCADE
+  - category: ForeignKey to `PostCategory`, related_name="posts", on_delete=SET_NULL, null=True, blank=True
+  - content: TextField, max_length=5000
+  - content_type: CharField, max_length=10, choices=CONTENT_TYPES, default="text"
+  - media_file: FileField, upload_to="momentos/posts/", validators=[image/video], blank=True, null=True
+  - link_url: URLField, blank=True, null=True
+  - is_public: BooleanField, default=True
+  - is_deleted: BooleanField, default=False
+  - comment_count: PositiveIntegerField, default=0
+  - share_count: PositiveIntegerField, default=0
+  - agree_count: PositiveIntegerField, default=0
+  - disagree_count: PositiveIntegerField, default=0
+  - neutral_count: PositiveIntegerField, default=0
+  - like_count: PositiveIntegerField, default=0
+  - heart_count: PositiveIntegerField, default=0
+  - Meta: ordering=["-created_at"], verbose_name="Post", verbose_name_plural="Posts"
+- **Comment** (TimeStampedUUIDModel)
+  - post: ForeignKey to `Post`, related_name="comments", on_delete=CASCADE
+  - user: ForeignKey to `user.User`, related_name="comments", on_delete=CASCADE
+  - content: TextField, max_length=1000
+  - parent: ForeignKey to self, related_name="replies", on_delete=CASCADE, null=True, blank=True
+  - is_deleted: BooleanField, default=False
+  - agree_count: PositiveIntegerField, default=0
+  - disagree_count: PositiveIntegerField, default=0
+  - neutral_count: PositiveIntegerField, default=0
+  - like_count: PositiveIntegerField, default=0
+  - heart_count: PositiveIntegerField, default=0
+  - Meta: ordering=["created_at"], verbose_name="Comment", verbose_name_plural="Comments"
+- **Hashtag** (TimeStampedUUIDModel)
+  - name: CharField, max_length=50, unique=True
+  - post_count: PositiveIntegerField, default=0
+  - is_active: BooleanField, default=True
+  - Meta: verbose_name="Hashtag", verbose_name_plural="Hashtags"
+- **PostHashtag** (TimeStampedUUIDModel)
+  - post: ForeignKey to `Post`, related_name="hashtags", on_delete=CASCADE
+  - hashtag: ForeignKey to `Hashtag`, related_name="posts", on_delete=CASCADE
+  - Meta: unique_together=["post", "hashtag"], verbose_name="Post Hashtag", verbose_name_plural="Post Hashtags"
+- **Reaction** (TimeStampedUUIDModel)
+  - post: ForeignKey to `Post`, related_name="reactions", on_delete=CASCADE, null=True, blank=True
+  - comment: ForeignKey to `Comment`, related_name="reactions", on_delete=CASCADE, null=True, blank=True
+  - user: ForeignKey to `user.User`, related_name="reactions", on_delete=CASCADE
+  - reaction_type: CharField, max_length=10, choices=REACTION_CHOICES
+  - Meta: unique_together=["post", "comment", "user", "reaction_type"], verbose_name="Reaction", verbose_name_plural="Reactions"
+- **Like** (TimeStampedUUIDModel)
+  - post: ForeignKey to `Post`, related_name="likes", on_delete=CASCADE
+  - user: ForeignKey to `user.User`, related_name="likes", on_delete=CASCADE
+  - Meta: unique_together=["post", "user"], verbose_name="Like", verbose_name_plural="Likes"
+- **Share** (TimeStampedUUIDModel)
+  - original_post: ForeignKey to `Post`, related_name="shares", on_delete=CASCADE
+  - user: ForeignKey to `user.User`, related_name="shares", on_delete=CASCADE
+  - caption: TextField, max_length=500, blank=True
+  - Meta: unique_together=["original_post", "user"], verbose_name="Share", verbose_name_plural="Shares"
+- **Agreement** (TimeStampedUUIDModel)
+  - post: ForeignKey to `Post`, related_name="agreements", on_delete=CASCADE, null=True, blank=True
+  - comment: ForeignKey to `Comment`, related_name="agreements", on_delete=CASCADE, null=True, blank=True
+  - user: ForeignKey to `user.User`, related_name="agreements", on_delete=CASCADE
+  - agreement_type: CharField, max_length=10, choices=AGREEMENT_CHOICES
+  - Meta: unique_together=["post", "comment", "user"], verbose_name="Agreement", verbose_name_plural="Agreements"
+
+### review
+- **Review** (TimeStampedUUIDModel)
+  - rater: ForeignKey to AUTH_USER_MODEL, on_delete=SET_NULL, null=True
+  - provider: ForeignKey to `userprofile.UserProfile`, related_name="agent_review", on_delete=SET_NULL, null=True
+  - rating: IntegerField, choices=Range(1..5), default=0
+  - comment: TextField
+  - Meta: constraints=[CheckConstraint(~Q(rater=F("provider")), name="rater_is_not_provider")]
+
+### transaction
+- **Transaction** (TimeStampedUUIDModel)
+  - user: ForeignKey to `user.User`, related_name="transactions", on_delete=CASCADE
+  - wallet: ForeignKey to `wallet.Wallet`, related_name="platform_transactions", on_delete=CASCADE
+  - transaction_type: CharField, max_length=30, choices=TRANSACTION_TYPES
+  - status: CharField, max_length=15, choices=TRANSACTION_STATUS, default="pending"
+  - amount: DecimalField, max_digits=12, decimal_places=2
+  - fee: DecimalField, max_digits=10, decimal_places=2, default=0.00
+  - source_module: CharField, max_length=50
+  - related_object_id: CharField, max_length=100, blank=True
+  - description: TextField, blank=True
+  - reference_number: CharField, max_length=100, unique=True
+  - processed_at: DateTimeField, null=True, blank=True
+  - completed_at: DateTimeField, null=True, blank=True
+  - Meta: verbose_name="Transaction", verbose_name_plural="Transactions", ordering=["-created_at"]
+
+### wallet
+- **Wallet** (TimeStampedUUIDModel)
+  - user: OneToOneField to `user.User`, related_name="wallet", on_delete=CASCADE
+  - balance: DecimalField, max_digits=12, decimal_places=2, default=0.00
+  - is_active: BooleanField, default=True
+  - is_verified: BooleanField, default=False
+  - daily_withdrawal_limit: DecimalField, max_digits=12, decimal_places=2, default=50000.00
+  - daily_withdrawal_used: DecimalField, max_digits=12, decimal_places=2, default=0.00
+  - Meta: verbose_name="Wallet", verbose_name_plural="Wallets"
+- **PaymentMethod** (TimeStampedUUIDModel)
+  - user: ForeignKey to `user.User`, related_name="payment_methods", on_delete=CASCADE
+  - method_type: CharField, max_length=20, choices=METHOD_CHOICES
+  - account_name: CharField, max_length=200
+  - account_number: CharField, max_length=100
+  - is_default: BooleanField, default=False
+  - is_verified: BooleanField, default=False
+  - verification_date: DateTimeField, null=True, blank=True
+  - Meta: verbose_name="Payment Method", verbose_name_plural="Payment Methods", unique_together=["user", "account_number"]
+- **Transaction** (TimeStampedUUIDModel) [wallet.transactions]
+  - wallet: ForeignKey to `Wallet`, related_name="transactions", on_delete=CASCADE
+  - payment_method: ForeignKey to `PaymentMethod`, on_delete=SET_NULL, null=True, blank=True
+  - transaction_type: CharField, max_length=20, choices=TRANSACTION_TYPES
+  - status: CharField, max_length=15, choices=TRANSACTION_STATUS, default="completed"
+  - amount: DecimalField, max_digits=12, decimal_places=2
+  - fee: DecimalField, max_digits=10, decimal_places=2, default=0.00
+  - balance_before: DecimalField, max_digits=12, decimal_places=2
+  - balance_after: DecimalField, max_digits=12, decimal_places=2
+  - reference_number: CharField, max_length=100, unique=True
+  - description: TextField, blank=True
+  - source_module: CharField, max_length=50, blank=True
+  - related_object_id: CharField, max_length=100, blank=True
+  - Meta: verbose_name="Transaction", verbose_name_plural="Transactions", ordering=["-created_at"]
+
+

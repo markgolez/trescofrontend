@@ -16,6 +16,11 @@ export const Heading = styled.h2`
 
 export const Input = styled(UInput)`
   width: 100%;
+  input {
+    background: #fdfdfd;
+    border: 1px solid #c8e6c9;
+    color: #0f2540;
+  }
 `;
 
 export const Link = styled(ULink)`

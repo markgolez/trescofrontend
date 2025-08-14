@@ -9,7 +9,7 @@ interface LayoutContextValue {
   sidebarCollapsed: boolean;
   setSidebarCollapsed: (collapsed: boolean) => void;
   detailPanel: DetailPanelState;
-  openDetailPanel: (content: ReactNode) => void;
+  openDetailPanel: (content: ReactNode, options?: { collapseSidebar?: boolean }) => void;
   closeDetailPanel: () => void;
 }
 
@@ -25,7 +25,11 @@ export const LayoutProvider = ({ children }: { children: ReactNode }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [detailPanel, setDetailPanel] = useState<DetailPanelState>({ isOpen: false, content: null });
 
-  const openDetailPanel = useCallback((content: ReactNode) => {
+  const openDetailPanel = useCallback((content: ReactNode, options?: { collapseSidebar?: boolean }) => {
+    const { collapseSidebar = true } = options || {};
+    if (collapseSidebar) {
+      setSidebarCollapsed(true);
+    }
     setDetailPanel({ isOpen: true, content });
   }, []);
 

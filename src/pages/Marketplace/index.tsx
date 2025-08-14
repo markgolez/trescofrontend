@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import * as S from './Styles';
+import { useLayout } from '../../contexts/LayoutContext';
 
 interface Product {
   id: number;
@@ -9,6 +10,7 @@ interface Product {
 
 const Marketplace = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const { openDetailPanel } = useLayout();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +37,12 @@ const Marketplace = () => {
       ) : (
         <S.Grid>
           {products.map((p) => (
-            <S.Card key={p.id}>
+            <S.Card key={p.id} onClick={() => openDetailPanel((
+              <div>
+                <h3>{p.title}</h3>
+                <div>Price: ${p.price.toFixed(2)}</div>
+              </div>
+            ))} style={{ cursor: 'pointer' }}>
               <S.CardTitle>{p.title}</S.CardTitle>
               <S.CardDesc>${p.price.toFixed(2)}</S.CardDesc>
             </S.Card>

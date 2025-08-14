@@ -9,9 +9,21 @@ const InnerLayout = () => {
   const { sidebarCollapsed, setSidebarCollapsed, detailPanel, closeDetailPanel } = useLayout();
   return (
     <S.LayoutContainer>
-      <Navbar onMenuToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      <Sidebar collapsed={sidebarCollapsed} />
-      <S.MainContent collapsed={sidebarCollapsed} hasDetail={detailPanel.isOpen}>
+      <div style={{ gridRow: 1, gridColumn: '1 / span 2' }}>
+        <Navbar onMenuToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+      </div>
+      <div style={{ gridRow: 2, gridColumn: 1 }}>
+        <Sidebar collapsed={sidebarCollapsed} />
+      </div>
+      <S.MainContent
+        collapsed={sidebarCollapsed}
+        hasDetail={detailPanel.isOpen}
+        onClick={() =>
+          detailPanel.isOpen
+            ? undefined
+            : setSidebarCollapsed(true)
+        }
+      >
         <Outlet />
       </S.MainContent>
       {detailPanel.isOpen && (

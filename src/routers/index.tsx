@@ -1,6 +1,9 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Unauthenticated from '../layouts/Unauthenticated';
+import Activation from '../pages/Activation';
+import Home from '../pages/Home';
+import Wallet from '../pages/Wallet';
 import AuthenticatedLayout from '../layouts/Authenticated';
 import Dashboard from '../pages/Dashboard';
 import Wallets from '../pages/Wallets';
@@ -16,11 +19,14 @@ const AppRouter = () => {
       {/* Authentication routes */}
       <Route path="/sign-in" element={<Unauthenticated />} />
       <Route path="/create-account" element={<Unauthenticated />} />
+      <Route path="/activate/:uid/:token" element={<Activation />} />
+      <Route path="/home" element={<Home />} />
       
       {/* Main app routes */}
       <Route path="/" element={<AuthenticatedLayout />}>
-        <Route index element={<Dashboard />} />
+        <Route index element={<Home />} />
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="wallets" element={<Wallet />} />
         <Route path="wallets" element={<Wallets />} />
         <Route path="profile" element={<Profile />} />
         <Route path="momentos" element={<Momentos />} />

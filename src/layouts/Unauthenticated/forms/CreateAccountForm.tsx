@@ -32,17 +32,18 @@ const CreateAccountForm: SFC = () => {
     console.log('CreateAccountForm: handleSubmit called with values:', values);
     try {
       const requestData = {
-        username: values.username,
-        first_name: values.first_name,
-        last_name: values.last_name,
-        email: values.email,
+        username: values.username.trim(),
+        first_name: values.first_name.trim(),
+        last_name: values.last_name.trim(),
+        email: values.email.trim(),
         password: values.password,
         re_password: values.re_password,
       };
       console.log('CreateAccountForm: Dispatching createUser with data:', requestData);
       await dispatch(createUser(requestData));
       console.log('CreateAccountForm: createUser completed successfully');
-      navigate('/');
+      window.alert('Account created successfully. Please check your email and click the activation link to activate your account.');
+      navigate(PATH_AUTHENTICATION.SIGN_IN);
     } catch (error: any) {
       console.error('CreateAccountForm: Error in handleSubmit:', error);
       handleFormikAPIError(error, helpers, 'Error creating account');

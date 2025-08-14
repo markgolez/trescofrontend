@@ -6,9 +6,8 @@ const SIDEBAR_COLLAPSED_WIDTH = 55;
 const SIDEBAR_EXPANDED_WIDTH = 250;
 
 const SidebarContainer = styled.aside<{ $isExpanded: boolean }>`
-  position: fixed;
-  left: 0;
-  top: 64px;
+  position: sticky;
+  top: 0;
   width: ${({ $isExpanded }) => ($isExpanded ? `${SIDEBAR_EXPANDED_WIDTH}px` : `${SIDEBAR_COLLAPSED_WIDTH}px`)};
   height: calc(100vh - 64px);
   background: #F7F7F7;
@@ -17,7 +16,6 @@ const SidebarContainer = styled.aside<{ $isExpanded: boolean }>`
   display: flex;
   flex-direction: column;
   padding-top: 0;
-  z-index: 90;
   box-shadow: 1px 0 15px rgba(0, 0, 0, 0.07);
 `;
 

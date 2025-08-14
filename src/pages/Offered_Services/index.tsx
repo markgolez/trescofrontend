@@ -50,7 +50,6 @@ const Services = () => {
   }, [navigate]);
 
   const handleOpenDetail = (service: Service) => {
-    setSidebarCollapsed(true);
     openDetailPanel(
       <div>
         <h3>{service.name}</h3>
@@ -62,7 +61,8 @@ const Services = () => {
           {service.provider_name && <S.Badge>{service.provider_name}</S.Badge>}
         </div>
         <div style={{ marginTop: 12, fontWeight: 600, color: '#0a440a' }}>{service.price ? `$${service.price}` : ''}</div>
-      </div>
+      </div>,
+      { collapseSidebar: true }
     );
   };
 

@@ -1,22 +1,22 @@
 import styled from 'styled-components';
 
 export const LayoutContainer = styled.div`
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: 64px 1fr;
+  grid-template-columns: auto 1fr;
   min-height: 100vh;
 `;
 
 export const MainContent = styled.main<{ collapsed: boolean; hasDetail?: boolean }>`
-  margin-top: 64px; /* Height of the navbar */
-  margin-left: ${props => (props.collapsed ? '55px' : '250px')}; /* Width of the sidebar */
+  grid-row: 2;
+  grid-column: 2;
   padding: 20px;
-  flex: 1;
-  transition: margin-left 0.25s ease-in-out;
-  margin-right: ${props => (props.hasDetail ? '360px' : '0')};
+  transition: padding-right 0.25s ease-in-out;
+  min-width: 0;
+  padding-right: ${props => (props.hasDetail ? '380px' : '20px')};
 
   @media (max-width: 768px) {
-    margin-left: 0;
-    margin-right: 0;
+    padding-right: 20px;
   }
 `;
 

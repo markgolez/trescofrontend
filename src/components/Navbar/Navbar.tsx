@@ -10,7 +10,7 @@ const NavbarContainer = styled.nav`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 2rem;
+  padding: 0 1rem;
   height: 64px;
   z-index: 100;
 `;
@@ -54,14 +54,14 @@ const NavLinks = styled.nav`
   display: flex;
   gap: 0;
   height: 100%;
+  overflow-x: auto; /* ensure nav doesn't overflow viewport */
 
   a {
-    display: table;
     border-collapse: collapse;
     border-spacing: 0;
     color: #536471;
     text-decoration: none;
-    padding: 0 16px;
+    padding: 0 12px;
     height: 100%;
     text-transform: uppercase;
     font-family: 'Titillium Web', sans-serif;
@@ -69,6 +69,7 @@ const NavLinks = styled.nav`
     border-left: 1px solid #f2f2f2;
     display: flex;
     align-items: center;
+    white-space: nowrap;
   }
 
   a:hover {
@@ -84,7 +85,7 @@ const NavLinks = styled.nav`
 const RightSection = styled.div`
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0;
   height: 100%;
 
   a, button {
@@ -92,7 +93,7 @@ const RightSection = styled.div`
     background: transparent;
     border: none;
     text-decoration: none;
-    padding: 0 16px;
+    padding: 0 12px;
     height: 100%;
     display: flex;
     align-items: center;
@@ -101,6 +102,7 @@ const RightSection = styled.div`
     text-transform: uppercase;
     font-size: 13px;
     border-left: 1px solid #f2f2f2;
+    white-space: nowrap; /* prevent wrapping/cutoff */
   }
 
   a:hover, button:hover {

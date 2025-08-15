@@ -1,11 +1,15 @@
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 
+import { useIsAuthenticated } from '../../hooks/useIsAuthenticated';
+import { useDispatch } from 'react-redux';
+import { logout } from '../../store/index';
+
 const NavbarContainer = styled.nav`
   position: fixed;
   top: 0;
   width: 100%;
-  background: #e8f4fa; /* lighter nav */
+  background: #e8f4fa;
   color: #0f2540;
   display: flex;
   align-items: center;
@@ -19,6 +23,7 @@ const LeftSection = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
+  min-width: 120px; /* Ensure space for logo and menu button */
 `;
 
 const MenuButton = styled.button`
@@ -48,17 +53,17 @@ const Logo = styled(Link)`
   font-size: 1.5rem;
   color: inherit;
   text-decoration: none;
+  white-space: nowrap;
 `;
 
 const NavLinks = styled.nav`
   display: flex;
   gap: 0;
   height: 100%;
-  overflow-x: auto; /* ensure nav doesn't overflow viewport */
+  margin: 0 auto; /* Center the nav links */
+  padding: 0 1rem;
 
   a {
-    border-collapse: collapse;
-    border-spacing: 0;
     color: #536471;
     text-decoration: none;
     padding: 0 12px;
@@ -73,7 +78,7 @@ const NavLinks = styled.nav`
   }
 
   a:hover {
-    background: #66bb6a; /* green 400 */
+    background: #66bb6a;
     color: #fff;
   }
 
@@ -87,6 +92,7 @@ const RightSection = styled.div`
   align-items: center;
   gap: 0;
   height: 100%;
+  min-width: 100px; /* Ensure space for login/logout button */
 
   a, button {
     color: #536471;
@@ -102,12 +108,19 @@ const RightSection = styled.div`
     text-transform: uppercase;
     font-size: 13px;
     border-left: 1px solid #f2f2f2;
-    white-space: nowrap; /* prevent wrapping/cutoff */
+    white-space: nowrap;
   }
 
   a:hover, button:hover {
     background: #66bb6a;
     color: #fff;
+  }
+
+  @media (max-width: 400px) {
+    a, button {
+      padding: 0 8px;
+      font-size: 12px;
+    }
   }
 `;
 
@@ -116,8 +129,17 @@ interface NavbarProps {
 }
 
 const Navbar = ({ onMenuToggle }: NavbarProps) => {
-  // TODO: Add auth state logic hooked to store
-  const isAuthenticated = false;
+  const isAuthenticated = useIsAuthenticated();
+  const dispatch = useDispatch();
+
+  console.log('[Navbar] Authentication status:', isAuthenticated);
+  const handleLogout = () => {
+    // Clear tokens from localStorage
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    // Update Redux state
+    dispatch(logout());
+  };
 
   return (
     <NavbarContainer>
@@ -132,7 +154,7 @@ const Navbar = ({ onMenuToggle }: NavbarProps) => {
         <Link to="/profile">Profile</Link>
       </NavLinks>
       <RightSection>
-        {isAuthenticated ? <button>Logout</button> : <Link to="/sign-in">Login</Link>}
+        {isAuthenticated ? <button onClick={handleLogout}>Logout</button> : <Link to="/sign-in">Login</Link>}
       </RightSection>
     </NavbarContainer>
   );

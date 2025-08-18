@@ -6,7 +6,6 @@ import Home from '../pages/Home';
 import Wallet from '../pages/Wallet';
 import AuthenticatedLayout from '../layouts/Authenticated';
 import Dashboard from '../pages/Dashboard';
-import Wallets from '../pages/Wallets';
 import Profile from '../pages/Profile';
 import Momentos from '../pages/Momentos';
 import Marketplace from '../pages/Marketplace';
@@ -27,7 +26,6 @@ const AppRouter = () => {
         <Route index element={<Home />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="wallets" element={<Wallet />} />
-        <Route path="wallets" element={<Wallets />} />
         <Route path="profile" element={<Profile />} />
         <Route path="momentos" element={<Momentos />} />
         <Route path="marketplace" element={<Marketplace />} />

@@ -20,6 +20,11 @@ export const Card = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+  transition: transform 0.2s ease-in-out;
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
 `;
 
 export const CardTitle = styled.h3`

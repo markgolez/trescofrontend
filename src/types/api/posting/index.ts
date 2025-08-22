@@ -20,6 +20,7 @@ export interface Posting extends CreatedModified {
   reserve_price: number;
   buy_now_price: number;
   current_price: number;
+  date_joined: string;
   start_date: string;
   end_date: string;
   min_bid_increment: number;
@@ -105,6 +106,11 @@ export interface PostingView extends CreatedModified {
   post: Posting;
   viewer: UserReadSerializer | null;
   ip_address: string;
+}
+export interface PostingWithRelations extends Posting {
+  category_detail?: PostingCategory;
+  bids?: Bid[];
+  seller_profile?: any;
 }
 
 export type Postings = Dict<Posting>;

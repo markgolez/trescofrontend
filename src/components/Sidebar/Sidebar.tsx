@@ -7,7 +7,7 @@ const SIDEBAR_EXPANDED_WIDTH = 250;
 
 const SidebarContainer = styled.aside<{ $isExpanded: boolean }>`
   position: sticky;
-  top: 0;
+  top: 64px; /* Add this to account for navbar height */
   width: ${({ $isExpanded }) => ($isExpanded ? `${SIDEBAR_EXPANDED_WIDTH}px` : `${SIDEBAR_COLLAPSED_WIDTH}px`)};
   height: calc(100vh - 64px);
   background: #F7F7F7;
